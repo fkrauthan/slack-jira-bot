@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"bytes"
 	"log"
 	"os"
 	"regexp"
@@ -26,7 +27,7 @@ func main() {
 	rtm := api.NewRTM()
 	go rtm.ManageConnection()
 
-	log.Printf("main: Now listening for events")
+	log.Print("main: Now listening for events")
 
 	for {
 		select {
@@ -39,7 +40,7 @@ func main() {
 			case *slack.RTMError:
 				log.Printf("main: Error: %s\n", ev.Error())
 			case *slack.InvalidAuthEvent:
-				log.Printf("main: Invalid credentials")
+				log.Print("main: Invalid credentials")
 			default:
 				// Ignore other events..
 			}
@@ -95,15 +96,26 @@ func getChannel(channelID string) (*slack.Channel, error) {
 }
 
 func formatMessage(issue gojira.Issue) string {
-	message := fmt.Sprintf(
-		"*%s: %s* _Reported by %s_ - %s",
-		issue.Key,
-		issue.Fields.Summary,
-		issue.Fields.Reporter.DisplayName,
-		getJiraURL(issue.Key),
-	)
+	var message bytes.Buffer
 
-	return message
+	message.WriteString(fmt.Sprintf(
+		"<%s|%s> :traffic_light: *Status:* %s :memo: *Summary:* %s\n",
+		getJiraURL(issue.Key),
+		issue.Key,
+		issue.Fields.Status.Name,
+		issue.Fields.Summary,
+	))
+	message.WriteString(fmt.Sprintf(
+		":bust_in_silhouette: *Creator:* %s, *Assignee:* %s\n",
+		issue.Fields.Reporter.DisplayName,
+		issue.Fields.Assignee.DisplayName,
+	))
+	message.WriteString(fmt.Sprintf(
+		":calendar: *Created:* %s",
+		issue.Fields.Created,
+	))
+
+	return message.String()
 }
 
 func getJiraURL(issueKey string) string {
@@ -159,7 +171,7 @@ func extractIssueIDs(message string) []string {
 
 func getConfig() BotConfig {
 	return BotConfig{
-		Username:     "jirabot",
+		Username:     "JiraBot",
 		SlackAPIKey:  os.Getenv("SLACK_API_KEY"),
 		JiraBaseURL:  os.Getenv("JIRA_BASEURL"),
 		JiraUsername: os.Getenv("JIRA_USERNAME"),
