@@ -99,19 +99,20 @@ func formatMessage(issue gojira.Issue) string {
 	var message bytes.Buffer
 
 	message.WriteString(fmt.Sprintf(
-		"<%s|%s> :traffic_light: *Status:* %s :memo: *Summary:* %s\n",
+		"> <%s|%s> :traffic_light: *Status:* %s :memo: *Summary:* %s\n",
 		getJiraURL(issue.Key),
 		issue.Key,
 		issue.Fields.Status.Name,
 		issue.Fields.Summary,
 	))
 	message.WriteString(fmt.Sprintf(
-		":bust_in_silhouette: *Creator:* %s, *Assignee:* %s\n",
+		"> :bust_in_silhouette: *Creator:* %s, *Assignee:* %s\n",
 		issue.Fields.Reporter.DisplayName,
 		issue.Fields.Assignee.DisplayName,
 	))
 	message.WriteString(fmt.Sprintf(
-		":calendar: *Created:* %s",
+		"> :calendar: *Created:* <!date^%d^{date} at {time}|%s>",
+		issue.CreatedAt.Unix(),
 		issue.Fields.Created,
 	))
 
